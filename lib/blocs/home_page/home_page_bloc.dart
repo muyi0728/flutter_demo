@@ -21,9 +21,8 @@ class HomePageBloc implements BlocBase {
 
   /// 获取轮播、宫格导航数据
   void getCommonList() async {
-    List<CarouseModel> carouselList = await repository.getCarouse();
-    List<GridNavigationModel> gridNavigationList = await repository.getGridNavigation();
-    HomePageCommonModel _list = HomePageCommonModel(carouselList: carouselList, gridNavigationList: gridNavigationList);
+    List response = await Future.wait([repository.getCarouse(), repository.getGridNavigation()]);
+    HomePageCommonModel _list = HomePageCommonModel(carouselList: response[0], gridNavigationList: response[1]);
     _homePageCommonMapSink.add(_list);
   }
 
