@@ -4,10 +4,6 @@ import './grid_navigation.dart';
 import '../../widgets/commodity_info_card.dart';
 import '../../models/home_page_model.dart';
 import '../../blocs/home_page/home_page_bloc.dart';
-import '../../bloc_widgets/bloc_state_builder.dart';
-import '../../blocs/home_page/commodity_info_bloc.dart';
-import '../../blocs/home_page/commodity_info_event.dart';
-import '../../blocs/home_page/commodity_info_state.dart';
 
 class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
@@ -15,24 +11,19 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   HomePageBloc bloc;
-  CommodityInfoBloc commodityInfoBloc;
+  int pageIndex = 0;
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     bloc = HomePageBloc();
-    commodityInfoBloc = CommodityInfoBloc();
-    bloc.getGridNavigationList();
-    bloc.getCarouselList();
-//    bloc.getCommodityInfo();
-    commodityInfoBloc.emitEvent(CommodityInfoEvent());
+    bloc.getCommonList();
+    bloc.getCommodityInfo();
     _scrollController.addListener(() {
       if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
-        print("loadMore");
-        commodityInfoBloc.emitEvent(CommodityInfoEvent(
-          type: CommodityInfoEventType.loadMore
-        ));
+        pageIndex = ++pageIndex;
+        bloc.getCommodityInfo(pageIndex: pageIndex);
       }
     });
   }
@@ -58,21 +49,22 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
           /// 轮播图
           SliverToBoxAdapter(
             child: StreamBuilder(
-              stream: bloc.carouse,
-              builder: (BuildContext context, AsyncSnapshot<List<CarouseModel>> snapshot){
+              stream: bloc.homePageCommonMap,
+              builder: (BuildContext context, AsyncSnapshot<HomePageCommonModel> snapshot){
                 if (snapshot.data != null) {
-                  return  Container(
+                  return Container(
                     height: 240,
                     child: Swiper(
                       itemBuilder: (BuildContext context, int index) {
                         return Image.network(
-                          snapshot.data[index].imageSrc,
+                          snapshot.data.carouselList[index].imageSrc,
                           fit: BoxFit.fill,
                         );
                       },
-                      itemCount: snapshot.data == null ? 0 : snapshot.data.length,
+                      itemCount: snapshot.data.carouselList.length,
                       autoplay: true,
-                      pagination: SwiperPagination(),
+                      itemHeight: 240.0,
+                      pagination: new SwiperPagination(),
                       onTap: (int index) {
                         // print("$index");
                       },
@@ -103,11 +95,11 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               child: Container(
                 margin: const EdgeInsets.only(bottom: 20.0),
                 child: StreamBuilder(
-                  stream: bloc.gridNavigationList,
-                  builder: (BuildContext context, AsyncSnapshot<List<GridNavigationModel>> snapshot) {
+                  stream: bloc.homePageCommonMap,
+                  builder: (BuildContext context, AsyncSnapshot<HomePageCommonModel> snapshot) {
                     List<Widget> _gridNavigation = [];
                     if (snapshot.data != null) {
-                      snapshot.data.forEach((item){
+                      snapshot.data.gridNavigationList.forEach((item){
                         _gridNavigation.add(GridNavigation(item));
                       });
                       return Wrap(
@@ -124,12 +116,10 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
           ),
           /// 商品信息列表
           Container(
-            child: BlocEventStateBuilder<CommodityInfoState>(
-              bloc: commodityInfoBloc,
-              builder: (BuildContext context, CommodityInfoState state) {
-                print(state.isLoading);
-                print(state.commodityInfoList);
-                if (state.commodityInfoList != null) {
+            child: StreamBuilder(
+              stream: bloc.commodityInfoList,
+              builder: (BuildContext context, AsyncSnapshot<List<CommodityInfoModel>> snapshot) {
+                if (snapshot.data != null) {
                   return SliverGrid(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
@@ -139,12 +129,12 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                     ),
                     // SliverChildBuilderDelegate
                     delegate: SliverChildBuilderDelegate((context, index) {
-                      return CommodityInfoCard(state.commodityInfoList[index]);
-                    }, childCount: state.commodityInfoList == null ? 0 : state.commodityInfoList.length),
+                      return CommodityInfoCard(snapshot.data[index]);
+                    }, childCount: snapshot.data.length),
                   );
                 } else {
                   return SliverToBoxAdapter(
-                    child: Text('列表数据加载中...')
+                      child: Text('列表数据加载中...')
                   );
                 }
               },

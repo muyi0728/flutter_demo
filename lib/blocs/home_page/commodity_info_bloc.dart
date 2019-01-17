@@ -17,7 +17,7 @@ class CommodityInfoBloc extends BlocEventStateBase<CommodityInfoEvent, Commodity
     List<CommodityInfoModel> list;
     if (!currentState.isLoading) {
       yield CommodityInfoState.startLoad(_tempList);
-      list = await repository.getCommodityInfo();
+//      list = await repository.getCommodityInfo();
       _tempList.addAll(list);
     }
     if (event.type == CommodityInfoEventType.firstLoad) {

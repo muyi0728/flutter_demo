@@ -31,8 +31,8 @@ class HomeRepository {
   }
 
   /// 首页商品列表
-  Future<List<CommodityInfoModel>> getCommodityInfo() async {
-    ResponseModel<List> baseResp = await HttpSeverFactory.getHttp().request<List>(Method.get, '/user/get-commodity-info');
+  Future<List<CommodityInfoModel>> getCommodityInfo(data) async {
+    ResponseModel<List> baseResp = await HttpSeverFactory.getHttp().request<List>(Method.get, '/user/get-commodity-info', data: data);
     List<CommodityInfoModel> list;
     if (baseResp.status) {
       list = baseResp.data.map((item) {

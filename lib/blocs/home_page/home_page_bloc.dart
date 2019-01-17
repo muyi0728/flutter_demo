@@ -3,42 +3,47 @@ import '../../bloc_helpers/bloc_provider.dart';
 import '../../models/home_page_model.dart';
 import '../../repository/home_repository.dart';
 
-class HomePageBloc implements BlocBase {
-  /// 首页轮播图数据 Stream
-  BehaviorSubject<List<CarouseModel>> _carouseList = BehaviorSubject<List<CarouseModel>>();
-  Sink<List<CarouseModel>> get _carouseListSink => _carouseList.sink;
-  Stream<List<CarouseModel>> get carouse => _carouseList.stream;
 
-  /// 首页宫格导航数据 Stream
-  BehaviorSubject<List<GridNavigationModel>> _gridNavigationList = BehaviorSubject<List<GridNavigationModel>>();
-  Sink<List<GridNavigationModel>> get _gridNavigationListSink => _gridNavigationList.sink;
-  Stream<List<GridNavigationModel>> get gridNavigationList => _gridNavigationList.stream;
+class HomePageBloc implements BlocBase {
+
+  /// 首页轮播、宫格导航数据 公共Stream
+  PublishSubject<HomePageCommonModel> _homePageCommonMap = PublishSubject<HomePageCommonModel>();
+  Sink<HomePageCommonModel> get _homePageCommonMapSink => _homePageCommonMap.sink;
+  Stream<HomePageCommonModel> get homePageCommonMap => _homePageCommonMap.stream;
+
+  /// 首页商品信息列表数据 Stream
+  PublishSubject<List<CommodityInfoModel>> _commodityInfoList = PublishSubject<List<CommodityInfoModel>>();
+  Sink<List<CommodityInfoModel>> get _commodityInfoListSink => _commodityInfoList.sink;
+  Stream<List<CommodityInfoModel>> get commodityInfoList => _commodityInfoList.stream;
 
   /// 实例化 repository
   HomeRepository repository = new HomeRepository();
 
-  /// 首页轮播图数据
-  Future getCarouselList() {
-    return repository.getCarouse().then((data){
-      List<CarouseModel> list = new List();
-      list.addAll(data);
-      _carouseListSink.add(list);
-    });
+  /// 获取轮播、宫格导航数据
+  void getCommonList() async {
+    List<CarouseModel> carouselList = await repository.getCarouse();
+    List<GridNavigationModel> gridNavigationList = await repository.getGridNavigation();
+    HomePageCommonModel _list = HomePageCommonModel(carouselList: carouselList, gridNavigationList: gridNavigationList);
+    _homePageCommonMapSink.add(_list);
   }
 
-  /// 首页宫格导航数据
-  Future getGridNavigationList() {
-    return repository.getGridNavigation().then((data){
-      List<GridNavigationModel> list = new List();
-      list.addAll(data);
-      _gridNavigationListSink.add(list);
-    });
-  }
+  /// 获取商品信息列表数据
+  bool _isLoading = false;
+  List<CommodityInfoModel> _list = [];
 
+  void getCommodityInfo({int pageIndex = 0}) async {
+    CommodityInfoQueryModel _query = new CommodityInfoQueryModel(pageIndex: pageIndex);
+    if (_isLoading) return;
+    _isLoading = true;
+    List<CommodityInfoModel> list = await repository.getCommodityInfo(_query.toJson());
+    _isLoading = false;
+    _list.addAll(list);
+    _commodityInfoListSink.add(_list);
+  }
 
   @override
   void dispose() {
-    _gridNavigationList.close();
-    _carouseList.close();
+    _commodityInfoList.close();
+    _homePageCommonMap.close();
   }
 }
