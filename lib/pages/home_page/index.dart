@@ -22,7 +22,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
     bloc.getCommodityInfo();
     _scrollController.addListener(() {
       if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
-        pageIndex = ++pageIndex;
+        pageIndex = pageIndex++;
         bloc.getCommodityInfo(pageIndex: pageIndex);
       }
     });
@@ -63,7 +63,6 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                       },
                       itemCount: snapshot.data.carouselList.length,
                       autoplay: true,
-                      itemHeight: 240.0,
                       pagination: new SwiperPagination(),
                       onTap: (int index) {
                         // print("$index");
@@ -125,7 +124,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                       crossAxisCount: 2,
                       mainAxisSpacing: 10.0,
                       crossAxisSpacing: 0,
-                      childAspectRatio: 3 / 4,
+                      childAspectRatio: 4 / 5,
                     ),
                     // SliverChildBuilderDelegate
                     delegate: SliverChildBuilderDelegate((context, index) {
@@ -139,9 +138,27 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                 }
               },
             ),
-          )
+          ),
         ],
       ),
+      floatingActionButton: buildFloatingActionButton(),
+    );
+  }
+
+  /// 返回顶部
+  Widget buildFloatingActionButton() {
+//    if (_scrollController == null || _scrollController.offset < 600) {
+//      return null;
+//    }
+    return new FloatingActionButton(
+      backgroundColor: Theme.of(context).primaryColor,
+      child: Icon(
+        Icons.keyboard_arrow_up,
+      ),
+      mini: true,
+      onPressed: () {
+        _scrollController.animateTo(0.0, duration: new Duration(milliseconds: 300), curve: Curves.linear);
+      },
     );
   }
 }

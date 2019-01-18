@@ -18,14 +18,15 @@ class CommodityInfoCard extends StatelessWidget {
         child: new Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            new Container(
-              decoration: new BoxDecoration(
-                  border: new Border.all(color: Colors.white, width: 1),
-                  borderRadius:
-                      const BorderRadius.all(const Radius.circular(8))),
-              width: MediaQuery.of(context).size.width / 2,
-              height: 210,
-              child: Image.network(commodityInfo.imageSrc, fit: BoxFit.cover),
+            Expanded(
+              child: Container(
+                decoration: new BoxDecoration(
+                    border: new Border.all(color: Colors.white, width: 1),
+                    borderRadius:
+                    const BorderRadius.all(const Radius.circular(8))),
+                width: MediaQuery.of(context).size.width / 2,
+                child: Image.network(commodityInfo.imageSrc, fit: BoxFit.cover),
+              ),
             ),
             Row(
               children: <Widget>[
