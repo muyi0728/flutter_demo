@@ -20,29 +20,23 @@ class _ApplicationState extends State<Application> {
     ApplicationRouter.router = router;
   }
 
-  PageController pageController;
+  PageController _pageController;
   int _pageIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    pageController = PageController(initialPage: this._pageIndex);
+    _pageController = PageController(initialPage: 0);
   }
 
   @override
   void dispose() {
-    pageController.dispose();
     super.dispose();
+    _pageController.dispose();
   }
 
   void onTap(int index) {
-    pageController.animateToPage(index, duration: const Duration(milliseconds: 300), curve: Curves.ease);
-  }
-
-  void onPageChanged(int index) {
-    setState(() {
-      this._pageIndex = index;
-    });
+    _pageController.animateToPage(index, duration: const Duration(milliseconds: 300), curve: Curves.ease);
   }
 
   @override
@@ -61,8 +55,8 @@ class _ApplicationState extends State<Application> {
             CartPage(),
             AccountPage(),
           ],
-          controller: pageController,
-          onPageChanged: onPageChanged,
+          controller: _pageController,
+          physics: NeverScrollableScrollPhysics(),
         ),
         bottomNavigationBar: BottomNavigationBar(
           items: [
@@ -73,7 +67,12 @@ class _ApplicationState extends State<Application> {
             BottomNavigationBarItem(icon: Icon(Icons.account_box), title: Text('Account')),
           ],
           fixedColor: Colors.orange,
-          onTap: onTap,
+          onTap: (int index) {
+            _pageController.jumpToPage(index);
+            setState(() {
+              _pageIndex = index;
+            });
+          },
           currentIndex: _pageIndex,
           type: BottomNavigationBarType.fixed,
         ),

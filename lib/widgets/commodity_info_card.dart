@@ -24,7 +24,6 @@ class CommodityInfoCard extends StatelessWidget {
                     border: new Border.all(color: Colors.white, width: 1),
                     borderRadius:
                     const BorderRadius.all(const Radius.circular(8))),
-                width: MediaQuery.of(context).size.width / 2,
                 child: Image.network(commodityInfo.imageSrc, fit: BoxFit.cover),
               ),
             ),

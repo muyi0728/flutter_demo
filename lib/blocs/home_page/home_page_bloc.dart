@@ -7,12 +7,12 @@ import '../../repository/home_repository.dart';
 class HomePageBloc implements BlocBase {
 
   /// 首页轮播、宫格导航数据 公共Stream
-  PublishSubject<HomePageCommonModel> _homePageCommonMap = PublishSubject<HomePageCommonModel>();
+  BehaviorSubject<HomePageCommonModel> _homePageCommonMap = BehaviorSubject<HomePageCommonModel>();
   Sink<HomePageCommonModel> get _homePageCommonMapSink => _homePageCommonMap.sink;
   Stream<HomePageCommonModel> get homePageCommonMap => _homePageCommonMap.stream;
 
   /// 首页商品信息列表数据 Stream
-  PublishSubject<List<CommodityInfoModel>> _commodityInfoList = PublishSubject<List<CommodityInfoModel>>();
+  BehaviorSubject<List<CommodityInfoModel>> _commodityInfoList = BehaviorSubject<List<CommodityInfoModel>>();
   Sink<List<CommodityInfoModel>> get _commodityInfoListSink => _commodityInfoList.sink;
   Stream<List<CommodityInfoModel>> get commodityInfoList => _commodityInfoList.stream;
 

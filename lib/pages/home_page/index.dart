@@ -2,37 +2,53 @@ import 'package:flutter/material.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import './grid_navigation.dart';
 import '../../widgets/commodity_info_card.dart';
+import '../../widgets/return_top.dart';
 import '../../models/home_page_model.dart';
 import '../../blocs/home_page/home_page_bloc.dart';
+import '../../blocs/common_bloc/return_top_bloc.dart';
 
 class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
-  HomePageBloc bloc;
+  HomePageBloc homePageBloc;
+  ReturnTopBloc returnTopBloc;
   int pageIndex = 0;
+  bool scrollCheckSwitch = false;
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    bloc = HomePageBloc();
-    bloc.getCommonList();
-    bloc.getCommodityInfo();
+    homePageBloc = HomePageBloc();
+    returnTopBloc = ReturnTopBloc();
+    homePageBloc.getCommonList();
+    homePageBloc.getCommodityInfo();
     _scrollController.addListener(() {
       if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
         pageIndex = pageIndex++;
-        bloc.getCommodityInfo(pageIndex: pageIndex);
+        homePageBloc.getCommodityInfo(pageIndex: pageIndex);
+      }
+    });
+    _scrollController.addListener(() {
+      if (_scrollController.offset < 600 && scrollCheckSwitch) {
+        scrollCheckSwitch = false;
+        returnTopBloc.setReturnTopStatus(isShowReturnTopBtn: true);
+      } else if (_scrollController.offset > 600 && !scrollCheckSwitch) {
+        scrollCheckSwitch = true;
+        returnTopBloc.setReturnTopStatus(isShowReturnTopBtn: false);
       }
     });
   }
 
   @override
   void dispose() {
-    bloc?.dispose();
+    homePageBloc?.dispose();
+    returnTopBloc?.dispose();
     _scrollController.dispose();
     super.dispose();
+    print('首页销毁了...');
   }
 
   /// 重写 wantKeepAlive 保持页面当前状态
@@ -42,6 +58,9 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('首页'),
+      ),
       body: CustomScrollView(
         controller: _scrollController,
         physics: ScrollPhysics(),
@@ -49,11 +68,11 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
           /// 轮播图
           SliverToBoxAdapter(
             child: StreamBuilder(
-              stream: bloc.homePageCommonMap,
+              stream: homePageBloc.homePageCommonMap,
               builder: (BuildContext context, AsyncSnapshot<HomePageCommonModel> snapshot){
                 if (snapshot.data != null) {
                   return Container(
-                    height: 240,
+                    height: 200,
                     child: Swiper(
                       itemBuilder: (BuildContext context, int index) {
                         return Image.network(
@@ -94,7 +113,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               child: Container(
                 margin: const EdgeInsets.only(bottom: 20.0),
                 child: StreamBuilder(
-                  stream: bloc.homePageCommonMap,
+                  stream: homePageBloc.homePageCommonMap,
                   builder: (BuildContext context, AsyncSnapshot<HomePageCommonModel> snapshot) {
                     List<Widget> _gridNavigation = [];
                     if (snapshot.data != null) {
@@ -116,7 +135,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
           /// 商品信息列表
           Container(
             child: StreamBuilder(
-              stream: bloc.commodityInfoList,
+              stream: homePageBloc.commodityInfoList,
               builder: (BuildContext context, AsyncSnapshot<List<CommodityInfoModel>> snapshot) {
                 if (snapshot.data != null) {
                   return SliverGrid(
@@ -141,24 +160,17 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
           ),
         ],
       ),
-      floatingActionButton: buildFloatingActionButton(),
-    );
-  }
-
-  /// 返回顶部
-  Widget buildFloatingActionButton() {
-//    if (_scrollController == null || _scrollController.offset < 600) {
-//      return null;
-//    }
-    return new FloatingActionButton(
-      backgroundColor: Theme.of(context).primaryColor,
-      child: Icon(
-        Icons.keyboard_arrow_up,
+      /// 返回顶部
+      floatingActionButton: StreamBuilder(
+        stream: returnTopBloc.returnTopController,
+        initialData: true,
+        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+          return new ReturnTop(status: snapshot.data, onPressed: () {
+              _scrollController.animateTo(0.0, duration: new Duration(milliseconds: 300), curve: Curves.linear);
+            },
+          );
+        },
       ),
-      mini: true,
-      onPressed: () {
-        _scrollController.animateTo(0.0, duration: new Duration(milliseconds: 300), curve: Curves.linear);
-      },
     );
   }
 }
